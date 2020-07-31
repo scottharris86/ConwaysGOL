@@ -25,17 +25,19 @@ class ViewController: UIViewController {
             }
         }
     }
+    let playButton = UIBarButtonItem(image: UIImage(systemName: "play.fill"), style: .plain, target: self, action: #selector(playTapped(_:)))
     var container = UIImageView()
     let generationDetail = UILabel()
     var isPlaying = false
+    let headingLabel = UILabel()
 
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view.
+        layoutHeader()
         grid = game.grid
         renderGrid()
         layoutToolBar()
-//        layoutPlayButton()
         layoutGeneration()
         layoutSpeedSlider()
         
@@ -58,7 +60,7 @@ class ViewController: UIViewController {
     private func renderGrid() {
         view.addSubview(container)
         container.translatesAutoresizingMaskIntoConstraints = false
-        container.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 40).isActive = true
+        container.topAnchor.constraint(equalTo: headingLabel.bottomAnchor, constant: 16).isActive = true
         container.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: 16).isActive = true
         container.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -16).isActive = true
         container.heightAnchor.constraint(equalTo: container.widthAnchor).isActive = true
@@ -96,6 +98,16 @@ class ViewController: UIViewController {
         return cellIndex
     }
     
+    private func layoutHeader() {
+        headingLabel.font = .preferredFont(forTextStyle: .largeTitle)
+        headingLabel.text = "Conway's Game of Life"
+        view.addSubview(headingLabel)
+        headingLabel.translatesAutoresizingMaskIntoConstraints = false
+        headingLabel.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 16).isActive = true
+        headingLabel.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: 16).isActive = true
+        headingLabel.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -16).isActive = true
+    }
+    
     private func layoutToolBar() {
         let toolBar = UIToolbar(frame: CGRect(x: 0, y: 0, width: UIScreen.main.bounds.width, height: 35))
         view.addSubview(toolBar)
@@ -105,13 +117,49 @@ class ViewController: UIViewController {
         toolBar.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor).isActive = true
         toolBar.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor).isActive = true
         
-        let playButton = UIBarButtonItem(image: UIImage(systemName: "play.fill"), style: .plain, target: self, action: #selector(playTapped(_:)))
+        
         let presetButton = UIBarButtonItem(title: "Presets", style: .plain, target: self, action: #selector(presetsTapped))
+        let infoButton = UIBarButtonItem(image: UIImage(systemName: "info.circle"), style: .plain, target: self, action: #selector(showAbout))
         
         let flexibleSpace = UIBarButtonItem.flexibleSpace()
         let flexibleSpace2 = UIBarButtonItem.flexibleSpace()
-        var items = [presetButton, flexibleSpace, playButton, flexibleSpace2]
+        var items = [presetButton, flexibleSpace, playButton, flexibleSpace2, infoButton]
         toolBar.items = items
+    }
+    
+    @objc func showAbout() {
+        let modalVc = UIViewController()
+        modalVc.modalPresentationStyle = .automatic
+        let view = modalVc.view
+        view?.backgroundColor = .white
+        let rulesLabel = UILabel()
+        rulesLabel.font = .preferredFont(forTextStyle: .title1)
+        rulesLabel.text = "RULES"
+        view?.addSubview(rulesLabel)
+        rulesLabel.translatesAutoresizingMaskIntoConstraints = false
+        rulesLabel.topAnchor.constraint(equalTo: view!.safeAreaLayoutGuide.topAnchor, constant: 16).isActive = true
+        rulesLabel.leadingAnchor.constraint(equalTo: view!.safeAreaLayoutGuide.leadingAnchor, constant: 16).isActive = true
+        
+        let rules = UILabel()
+        rules.font = .preferredFont(forTextStyle: .body)
+        rules.numberOfLines = 20
+        rules.text =
+            """
+        Each generation, or turn, in the game the following rules are applied:
+
+        1.Any live cell with fewer than two live neighbours dies.
+        2. Any live cell with two or three live neighbours lives on to the next generation.
+        3. Any live cell with more than three live neighbours dies.
+        4. Any dead cell with exactly three live neighbours becomes a live cell.
+        """
+        
+        view?.addSubview(rules)
+        rules.translatesAutoresizingMaskIntoConstraints = false
+        rules.topAnchor.constraint(equalTo: rulesLabel.bottomAnchor, constant: 24).isActive = true
+        rules.leadingAnchor.constraint(equalTo: view!.safeAreaLayoutGuide.leadingAnchor, constant: 16).isActive = true
+        rules.trailingAnchor.constraint(equalTo: view!.safeAreaLayoutGuide.trailingAnchor, constant: -16).isActive = true
+        
+        present(modalVc, animated: true, completion: nil)
     }
     
     @objc func presetsTapped() {
@@ -165,9 +213,7 @@ class ViewController: UIViewController {
             self.dismiss(animated: true, completion: nil)
         }))
         
-        present(actionSheet, animated: true) {
-            
-        }
+        present(actionSheet, animated: true)
 
     }
     
@@ -233,8 +279,12 @@ class ViewController: UIViewController {
     }
     
     func resetState() {
-        isPlaying.toggle()
+        if isPlaying {
+            isPlaying.toggle()
+        }
+        generationCounter = -1
         invalidateTimer()
+        playButton.image = isPlaying ? UIImage(systemName: "pause.fill") : UIImage(systemName: "play.fill")
     }
     
     private func invalidateTimer() {

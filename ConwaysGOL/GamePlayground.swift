@@ -74,9 +74,7 @@ class GamePlayground {
         
         
     }
-    
-    
-    
+
     func generateTwoBlinkers() {
         let indexes = [84,85,86,482,483,484]
         for i in indexes {
